@@ -1,14 +1,16 @@
-# Use OpenJDK as base image
+# Use an official JDK runtime as a parent image
 FROM openjdk:17-jdk-slim
 
-# Set working directory in container
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy built JAR file into container
-COPY target/*.jar app.jar
+# Copy pom.xml and install dependencies separately for caching
+COPY pom.xml .
+RUN mvn dependency:go-offline
 
-# Expose the application port
-EXPOSE 8080
+# Copy the project files and build the application
+COPY . .
+RUN mvn clean package
 
-# Command to run the application
-CMD ["java", "-jar", "app.jar"]
+# Run the application
+CMD ["java", "-jar", "target/*.jar"]
