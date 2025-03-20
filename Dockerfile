@@ -27,3 +27,6 @@ CMD ["java", "-jar", "target/*.jar"]
 
 RUN chmod +x ./mvnw
 RUN ./mvnw dependency:go-offline
+
+# Copy the JAR file
+COPY target/backend-api-0.0.1-SNAPSHOT.jar app.jar
