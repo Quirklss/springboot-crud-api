@@ -1,27 +1,26 @@
-# Use official Maven image to build the project
-FROM maven:3.8.8-eclipse-temurin-17 AS build
-
-# Set the working directory
-WORKDIR /app
-
-# Copy the project files
-COPY . .
-
-# Build the project and create the JAR file
-RUN mvn clean package -DskipTests
-
-# Use a smaller JDK image for running the app
+# Use an official Java runtime as the base image
 FROM openjdk:17-jdk-slim
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the built JAR file from the Maven build stage
-COPY --from=build /app/target/*.jar app.jar
+# Copy the Maven wrapper and pom.xml to resolve dependencies
+COPY mvnw .
+COPY mvnw.cmd .
+COPY .mvn .mvn
+COPY pom.xml .
 
-# Run the application
-CMD ["java", "-jar", "app.jar"]
+# Download project dependencies (without running the application)
+RUN ./mvnw dependency:go-offline
 
+# Copy the entire project into the container
+COPY src src
+
+# Build the application
+RUN ./mvnw package
+
+# Expose the port your Spring Boot app runs on
 EXPOSE 8080
 
-ENTRYPOINT [ "java", "-jar", "app.jar" ]
+# Run the application
+CMD ["java", "-jar", "target/*.jar"]
